@@ -9,7 +9,7 @@ libexif static library is searched using pkg-config. To manually give a file pat
 libexif.a file, set the `LIBEXIF_STATIC_LIBRARY_PATH` environment variable during build time.  
   
 ## Example  
-```  
+```rust  
 use libexif_wrapper::{Exif, ExifIfd, ExifTag};  
   
 fn main() {  
@@ -23,7 +23,7 @@ fn main() {
 In addition to standardized EXIF tags, most camera manufacturers use the maker note exif tag to store useful information about the  
 photo. Maker notes are specific to the camera manufacturer. Note that libexif may not be able  
 to decode all maker note tags.  
-```  
+```rust  
 use libexif_wrapper::{Exif, ExifIfd, ExifTag};  
   
 fn main() {  
@@ -41,13 +41,12 @@ fn main() {
 ```  
   
 ## Installing libexif  
-`curl -L https://github.com/libexif/libexif/releases/download/v0.6.24/libexif-0.6.24.tar.bz2 | tar -jsx`  
-  
-`cd libexif-0.6.24`  
-  
-`./configure && make`  
-  
-`sudo make install`  
+```bash  
+curl -L https://github.com/libexif/libexif/releases/download/v0.6.24/libexif-0.6.24.tar.bz2 | tar -jsx  
+cd libexif-0.6.24  
+./configure && make  
+sudo make install  
+```
   
 Libexif is only required during build time, as it is linked statically.  
   
