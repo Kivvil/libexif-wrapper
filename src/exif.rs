@@ -1,9 +1,12 @@
 use std::ffi::{CStr, CString};
 
-use libexif_bindings::{
-    exif_content_get_entry, exif_data_free, exif_data_new_from_file, exif_entry_get_value,
-    ExifData, ExifIfd, ExifTag,
+use crate::bindings::{
+    exif_content_get_entry, exif_data_free, exif_data_get_mnote_data, exif_data_new_from_data,
+    exif_data_new_from_file, exif_entry_get_value, exif_mnote_data_count, exif_mnote_data_get_id,
+    exif_mnote_data_get_title, exif_mnote_data_get_value, ExifData,
 };
+
+use crate::{ExifIfd, ExifTag};
 
 pub struct Exif {
     exif_data: *mut ExifData,
@@ -11,15 +14,39 @@ pub struct Exif {
 
 #[derive(Debug)]
 pub enum ExifError {
-    FileNotFound,
+    ExifFailed,
+}
+
+#[derive(Debug)]
+pub enum MakerNoteError {
+    ExifFailed,
+    MakerNoteNotFound,
+    MNoteTagNotFound,
+}
+
+pub struct MakerNoteData {
+    /// The tag value
+    pub tag_id: u32,
+    /// The human readable title
+    pub title: String,
+    /// The human readable value, eg. f/5.6. May be empty, if no title is found.
+    pub value: String,
 }
 
 impl Exif {
-    pub fn from_file(file_name: &str) -> Result<Self, ExifError> {
+    pub fn from_jpeg_file(file_name: &str) -> Result<Self, ExifError> {
         let fname_cstr = CString::new(file_name).unwrap();
         let data = unsafe { exif_data_new_from_file(fname_cstr.as_ptr()) };
         if data == std::ptr::null_mut() {
-            return Err(ExifError::FileNotFound);
+            return Err(ExifError::ExifFailed);
+        }
+        Ok(Self { exif_data: data })
+    }
+
+    pub fn from_data(exif_data: &[u8]) -> Result<Self, ExifError> {
+        let data = unsafe { exif_data_new_from_data(exif_data.as_ptr(), exif_data.len() as u32) };
+        if data == std::ptr::null_mut() {
+            return Err(ExifError::ExifFailed);
         }
         Ok(Self { exif_data: data })
     }
@@ -27,7 +54,10 @@ impl Exif {
     pub fn get_entry_value(&self, ifd: ExifIfd, tag: ExifTag) -> Result<String, ()> {
         let mut buffer: [i8; 1024] = [0; 1024];
         let text_string_pointer = unsafe {
-            let entry = exif_content_get_entry((*self.exif_data).ifd[ifd as usize], tag);
+            let entry = exif_content_get_entry(
+                (*self.exif_data).ifd[ifd as usize],
+                tag as crate::bindings::ExifTag,
+            );
             if entry == std::ptr::null_mut() {
                 return Err(());
             }
@@ -39,6 +69,49 @@ impl Exif {
             .unwrap()
             .to_owned();
         Ok(string)
+    }
+
+    pub fn get_maker_note(&self, mnote_tag: u32) -> Result<MakerNoteData, MakerNoteError> {
+        let mnote_data = unsafe { exif_data_get_mnote_data(self.exif_data) };
+        if mnote_data == std::ptr::null_mut() {
+            return Err(MakerNoteError::MNoteTagNotFound);
+        }
+
+        let num = unsafe { exif_mnote_data_count(mnote_data) };
+        for i in 0..num {
+            if unsafe { exif_mnote_data_get_id(mnote_data, i) } == mnote_tag {
+                let mut buffer: [i8; 1024] = [0; 1024];
+                let value_string_pointer = unsafe {
+                    exif_mnote_data_get_value(
+                        mnote_data,
+                        i,
+                        buffer.as_mut_ptr(),
+                        buffer.len() as u32,
+                    )
+                };
+                let title_string_pointer = unsafe { exif_mnote_data_get_title(mnote_data, i) };
+                if value_string_pointer == std::ptr::null_mut()
+                    || title_string_pointer == std::ptr::null_mut()
+                {
+                    return Err(MakerNoteError::ExifFailed);
+                }
+                let value_string = unsafe { CStr::from_ptr(value_string_pointer) }
+                    .to_str()
+                    .unwrap()
+                    .to_owned();
+                let title_string = unsafe { CStr::from_ptr(title_string_pointer) }
+                    .to_str()
+                    .unwrap()
+                    .to_owned();
+                return Ok(MakerNoteData {
+                    tag_id: mnote_tag,
+                    title: title_string,
+                    value: value_string,
+                });
+            }
+        }
+        // Maker note tag was note found.
+        Err(MakerNoteError::MNoteTagNotFound)
     }
 }
 

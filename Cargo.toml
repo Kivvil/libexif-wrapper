@@ -2,9 +2,16 @@
 name = "libexif-wrapper"
 version = "0.1.0"
 edition = "2021"
-
-# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+license = "Apache-2.0"
+description = "A safe rust wrapper around libexif"
+repository = "https://github.com/Kivvil/libexif-wrapper"
+keywords = ["exif", "libexif", "wrapper", "metadata"]
+categories = ["api-bindings", "multimedia::images"]
+authors = ["Vilho Kivistö"]
+links = "exif"
 
 [dependencies]
-libexif-bindings = { path = "./libexif-bindings" }
 
+[build-dependencies]
+pkg-config = "0.3.29"
+bindgen = "0.69.2"
