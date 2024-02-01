@@ -8,6 +8,12 @@ installed to build the bindings. The bindings are generated using bindgen. By de
 libexif static library is searched using pkg-config. To manually give a file path to the  
 libexif.a file, set the `LIBEXIF_STATIC_LIBRARY_PATH` environment variable during build time.  
   
+Run 
+```bash
+cargo add libexif-wrapper 
+```
+ to add this crate as a dependency.  
+  
 ## Example  
 ```rust  
 use libexif_wrapper::{Exif, ExifIfd, ExifTag};  
