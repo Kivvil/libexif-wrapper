@@ -21,6 +21,8 @@ pub struct Exif {
     exif_data: *mut ExifData,
 }
 
+unsafe impl Send for Exif {}
+
 #[derive(Debug, PartialEq, Clone, Copy)]
 pub enum ExifError {
     /// An unknown error from libexif.
