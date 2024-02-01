@@ -8,22 +8,37 @@ use crate::bindings::{
 
 use crate::{ExifIfd, ExifTag};
 
+/// Acts as a safe wrapper around libexif native APIs.
+///
+/// # Example
+/// ```
+/// let exif = Exif::from_jpeg_file("test.jpg").unwrap();
+/// let datetime = exif.get_entry_value(ExifIfd::IfdExif, ExifTag::DateTimeOriginal);
+/// println!("The picture was taken on: {}", datetime);
+/// ```
+#[derive(Debug, PartialEq)]
 pub struct Exif {
     exif_data: *mut ExifData,
 }
 
-#[derive(Debug)]
+#[derive(Debug, PartialEq, Clone, Copy)]
 pub enum ExifError {
+    /// An unknown error from libexif.
     ExifFailed,
 }
 
-#[derive(Debug)]
+#[derive(Debug, PartialEq, Clone, Copy)]
 pub enum MakerNoteError {
+    /// An unknown error from libexif.
     ExifFailed,
+    /// No makernote EXIF tag
     MakerNoteNotFound,
+    /// Makernote EXIF tag was not found, but the specific maker note tag was not present in it.
     MNoteTagNotFound,
 }
 
+/// Contains data about a maker note tag.
+#[derive(Debug, PartialEq, Clone)]
 pub struct MakerNoteData {
     /// The tag value
     pub tag_id: u32,
@@ -34,6 +49,7 @@ pub struct MakerNoteData {
 }
 
 impl Exif {
+    /// Create an instance from a JPEG file path.
     pub fn from_jpeg_file(file_name: &str) -> Result<Self, ExifError> {
         let fname_cstr = CString::new(file_name).unwrap();
         let data = unsafe { exif_data_new_from_file(fname_cstr.as_ptr()) };
@@ -43,6 +59,7 @@ impl Exif {
         Ok(Self { exif_data: data })
     }
 
+    /// Create an instance from raw exif data.
     pub fn from_data(exif_data: &[u8]) -> Result<Self, ExifError> {
         let data = unsafe { exif_data_new_from_data(exif_data.as_ptr(), exif_data.len() as u32) };
         if data == std::ptr::null_mut() {
@@ -51,6 +68,7 @@ impl Exif {
         Ok(Self { exif_data: data })
     }
 
+    /// Get a human readable value of an EXIF tag.
     pub fn get_entry_value(&self, ifd: ExifIfd, tag: ExifTag) -> Result<String, ()> {
         let mut buffer: [i8; 1024] = [0; 1024];
         let text_string_pointer = unsafe {
@@ -71,6 +89,7 @@ impl Exif {
         Ok(string)
     }
 
+    /// Get a maker note tag, Note that maker note tags are specific for camera manufacturers.
     pub fn get_maker_note(&self, mnote_tag: u32) -> Result<MakerNoteData, MakerNoteError> {
         let mnote_data = unsafe { exif_data_get_mnote_data(self.exif_data) };
         if mnote_data == std::ptr::null_mut() {

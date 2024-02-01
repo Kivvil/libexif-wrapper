@@ -1,3 +1,4 @@
+/// Represents an EXIF tag.
 #[repr(u32)]
 pub enum ExifTag {
     InteroperabilityIndex = 1,
@@ -138,11 +139,17 @@ pub enum ExifTag {
     Padding = 59932,
 }
 
+/// Represents an EXIF ifd. Ifd0 is the primary image and contains techical specs about the
+/// image, Ifd1 is the thumbnail, and IfdExif contains info about the camera settings for example.
 #[repr(u8)]
 pub enum ExifIfd {
+    /// Primary image. Contains tags about the image dimensions for example.
     Ifd0 = 0,
+    /// The thumbnail. Contain the same tags as Ifd0, but their values are about the thumbnail.
     Ifd1 = 1,
+    /// General tags about camera settings for example.
     IfdExif = 2,
+    /// Contains GPS tags
     IfdGps = 3,
     IfdInteroperability = 4,
     IfdCount = 5,
