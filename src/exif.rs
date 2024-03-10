@@ -6,14 +6,15 @@ use crate::bindings::{
     exif_mnote_data_get_title, exif_mnote_data_get_value, ExifData,
 };
 
-use crate::{ExifIfd, ExifTag};
+use crate::{exif_tags::ExifTag, ExifIfd};
 
 /// Acts as a safe wrapper around libexif native APIs.
 ///
 /// # Example
 /// ```
-/// let exif = Exif::from_jpeg_file("test.jpg").unwrap();
-/// let datetime = exif.get_entry_value(ExifIfd::IfdExif, ExifTag::DateTimeOriginal);
+/// use libexif_wrapper::{Exif, ExifIfd, exif_tags, exif_tags::ExifTag};
+/// let exif = Exif::from_jpeg_file("test_resources/DSC_5613.jpg").unwrap();
+/// let datetime = exif.get_entry_value(ExifIfd::IfdExif, exif_tags::DATE_TIME_ORIGINAL).unwrap();
 /// println!("The picture was taken on: {}", datetime);
 /// ```
 #[derive(Debug, PartialEq)]
@@ -74,10 +75,7 @@ impl Exif {
     pub fn get_entry_value(&self, ifd: ExifIfd, tag: ExifTag) -> Result<String, ()> {
         let mut buffer: [i8; 1024] = [0; 1024];
         let text_string_pointer = unsafe {
-            let entry = exif_content_get_entry(
-                (*self.exif_data).ifd[ifd as usize],
-                tag as crate::bindings::ExifTag,
-            );
+            let entry = exif_content_get_entry((*self.exif_data).ifd[ifd as usize], tag);
             if entry == std::ptr::null_mut() {
                 return Err(());
             }
