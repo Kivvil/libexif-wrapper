@@ -10,11 +10,11 @@
 //!
 //! # Example
 //! ```
-//! use libexif_wrapper::{Exif, ExifIfd, ExifTag};
+//! use libexif_wrapper::{Exif, ExifIfd, exif_tags, exif_tags::ExifTag};
 //!
 //! fn main() {
 //!     let exif = Exif::from_jpeg_file("test_resources/DSC_5613.jpg").unwrap();
-//!     let datetime = exif.get_entry_value(ExifIfd::IfdExif, ExifTag::DateTimeOriginal).unwrap();
+//!     let datetime = exif.get_entry_value(ExifIfd::IfdExif, exif_tags::DATE_TIME_ORIGINAL).unwrap();
 //!     println!("The picture was taken on: {}", datetime);
 //! }
 //! ```
@@ -24,11 +24,11 @@
 //! photo. Maker notes are specific to the camera manufacturer. Note that libexif may not be able
 //! to decode all maker note tags.
 //! ```
-//! use libexif_wrapper::{Exif, ExifIfd, ExifTag};
+//! use libexif_wrapper::{Exif, ExifIfd, exif_tags};
 //!
 //! fn main() {
 //!     let exif = Exif::from_jpeg_file("test_resources/DSC_5613.jpg").unwrap();
-//!     let make = exif.get_entry_value(ExifIfd::Ifd0, ExifTag::Make).unwrap();
+//!     let make = exif.get_entry_value(ExifIfd::Ifd0, exif_tags::MAKE).unwrap();
 //!     println!("The picture was taken with a camera by {}", make);
 //!     // Get maker notes specific to Nikon cameras
 //!     if make == "NIKON CORPORATION" {
@@ -60,21 +60,25 @@ pub use exif_constants::*;
 
 #[cfg(test)]
 mod tests {
-    use crate::{exif::Exif, ExifIfd, ExifTag};
+    use crate::{exif::Exif, exif_tags, ExifIfd};
 
     #[test]
     fn read_exif_test() {
         let exif = Exif::from_jpeg_file("test_resources/DSC_5613.jpg").unwrap();
-        let make = exif.get_entry_value(ExifIfd::Ifd0, ExifTag::Make).unwrap();
-        let model = exif.get_entry_value(ExifIfd::Ifd0, ExifTag::Model).unwrap();
+        let make = exif
+            .get_entry_value(ExifIfd::Ifd0, exif_tags::MAKE)
+            .unwrap();
+        let model = exif
+            .get_entry_value(ExifIfd::Ifd0, exif_tags::MODEL)
+            .unwrap();
         let datetime_original = exif
-            .get_entry_value(ExifIfd::IfdExif, ExifTag::DateTimeOriginal)
+            .get_entry_value(ExifIfd::IfdExif, exif_tags::DATE_TIME_ORIGINAL)
             .unwrap();
         let aperture = exif
-            .get_entry_value(ExifIfd::IfdExif, ExifTag::Fnumber)
+            .get_entry_value(ExifIfd::IfdExif, exif_tags::FNUMBER)
             .unwrap();
         let focal_length = exif
-            .get_entry_value(ExifIfd::IfdExif, ExifTag::FocalLength)
+            .get_entry_value(ExifIfd::IfdExif, exif_tags::FOCAL_LENGTH)
             .unwrap();
         assert_eq!(&make, "NIKON CORPORATION");
         assert_eq!(&model, "NIKON D7000");
