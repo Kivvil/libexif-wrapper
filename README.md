@@ -1,4 +1,4 @@
-# A safe Rust wrapper aroung libexif.  
+# A safe Rust wrapper around libexif.  
 
 Libexif is a C library for extracting EXIF data from picture files. This crate contains a safe  
 wrapper around libexif. This crate also exposes unsafe rust bindings for libexif through the [`bindings`] module.  
